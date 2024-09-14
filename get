@@ -1,0 +1,72 @@
+package com.mycompany.get;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+/**
+ *
+ * @author Sahab
+ */
+public class Get {
+
+    public static void main(String[] args) {
+        try {
+            // Initial URL
+            String urlString = "http://webcode.me/";
+            boolean redirect = false;
+            
+            do {
+                // Create a URL object with the target URL
+                URL url = new URL(urlString);
+                
+                // Open a connection to the URL
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                
+                // Set the request method to GET
+                conn.setRequestMethod("GET");
+                
+                // Get the response code
+                int responseCode = conn.getResponseCode();
+                System.out.println("Response Code: " + responseCode);
+                
+                // Check if the response code is 301 (Moved Permanently)
+                if (responseCode == HttpURLConnection.HTTP_MOVED_PERM || responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
+                    // Get the new URL from the "Location" header
+                    urlString = conn.getHeaderField("Location");
+                    System.out.println("Redirecting to: " + urlString);
+                    redirect = true;
+                } else {
+                    redirect = false;
+                    
+                    // If the response code is 200 (HTTP_OK), read the response
+                    if (responseCode == HttpURLConnection.HTTP_OK) {
+                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        String inputLine;
+                        StringBuffer content = new StringBuffer();
+                        
+                        while ((inputLine = in.readLine()) != null) {
+                            content.append(inputLine);
+                            content.append(System.lineSeparator());
+                        }
+                        
+                        // Close the BufferedReader
+                        in.close();
+                        
+                        // Print the content
+                        System.out.println("Content:\n" + content.toString());
+                    } else {
+                        System.out.println("GET request failed.");
+                    }
+                }
+                
+                // Disconnect the connection
+                conn.disconnect();
+            } while (redirect);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
